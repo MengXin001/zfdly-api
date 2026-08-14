@@ -100,7 +100,10 @@ def update_photo(photo_id: uuid.UUID, body: PhotoUpdate, session: SessionDep, cu
     photo = find_photo(session, photo_id)
     if photo.user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="只能编辑自己的照片")
-    photo.sqlmodel_update(body.model_dump(exclude_unset=True))
+    photo_data = body.model_dump(exclude_unset=True)
+    if "author" in photo_data and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="只有管理员可以编辑照片作者")
+    photo.sqlmodel_update(photo_data)
     session.add(photo)
     session.commit()
     session.refresh(photo)

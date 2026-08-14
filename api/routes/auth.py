@@ -7,7 +7,7 @@ from sqlmodel import select
 from api.deps import CurrentAdmin, CurrentUser, SessionDep
 from api.storage import upload_path_from_url
 from core.security import get_password_hash, verify_password
-from models import Album, LoginRequest, Photo, RegisterRequest, User, UserAdminUpdate, UserPublic, UserUploadApprovalUpdate
+from models import Album, LoginRequest, PasswordUpdate, Photo, RegisterRequest, User, UserAdminUpdate, UserPublic, UserUploadApprovalUpdate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,6 +48,13 @@ def logout(request: Request) -> Response:
 @router.get("/me", response_model=UserPublic)
 def read_me(current_user: CurrentUser) -> UserPublic:
     return public_user(current_user)
+
+
+@router.patch("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+def update_my_password(body: PasswordUpdate, session: SessionDep, current_user: CurrentUser) -> None:
+    current_user.password_hash = get_password_hash(body.password)
+    session.add(current_user)
+    session.commit()
 
 
 @router.get("/users", response_model=list[UserPublic])

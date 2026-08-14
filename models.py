@@ -78,6 +78,10 @@ class UserAdminUpdate(SQLModel):
     is_admin: bool | None = None
 
 
+class PasswordUpdate(SQLModel):
+    password: str = PydanticField(min_length=8, max_length=128)
+
+
 class AlbumCreate(SQLModel):
     id: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     title: str = PydanticField(min_length=1, max_length=255)
@@ -100,6 +104,7 @@ class AlbumUpdate(SQLModel):
 class PhotoUpdate(SQLModel):
     filename: str | None = PydanticField(default=None, min_length=1, max_length=255)
     title: str | None = PydanticField(default=None, min_length=1, max_length=255)
+    author: str | None = PydanticField(default=None, min_length=1, max_length=100)
     comment: str | None = PydanticField(default=None, max_length=2000)
     location: str | None = PydanticField(default=None, max_length=255)
 
