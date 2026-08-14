@@ -92,6 +92,7 @@ class AlbumPublic(SQLModel):
 
 
 class PhotoUpdate(SQLModel):
+    filename: str | None = PydanticField(default=None, min_length=1, max_length=255)
     title: str | None = PydanticField(default=None, min_length=1, max_length=255)
     comment: str | None = PydanticField(default=None, max_length=2000)
     location: str | None = PydanticField(default=None, max_length=255)

@@ -1,4 +1,3 @@
-import os
 import uuid
 from pathlib import Path
 from typing import Annotated
@@ -7,6 +6,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, sta
 from sqlmodel import func, select
 
 from api.deps import CurrentAdmin, CurrentUser, SessionDep, UploadApprovedUser
+from api.storage import upload_path_from_url
 from core.config import settings
 from models import Album, Photo, PhotoPublic, PhotosPublic, PhotoUpdate
 
@@ -23,6 +23,13 @@ def detect_image_type(data: bytes) -> str | None:
     if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP" and int.from_bytes(data[4:8], "little") + 8 == len(data):
         return "webp"
     return None
+
+
+def uploaded_filename(filename: str | None) -> str:
+    name = (filename or "").replace("\\", "/").rsplit("/", 1)[-1]
+    if not name or len(name) > 255:
+        raise HTTPException(status_code=422, detail="文件名长度必须在 1 到 255 个字符之间")
+    return name
 
 
 def public_photo(photo: Photo) -> PhotoPublic:
@@ -75,12 +82,13 @@ def upload_photo(
         raise HTTPException(status_code=413, detail="文件大小必须小于 10MB")
     if image_type is None or file.content_type != IMAGE_TYPES[image_type]:
         raise HTTPException(status_code=415, detail="文件格式不支持")
+    filename = uploaded_filename(file.filename)
     photo_id = uuid.uuid4()
     stored_filename = f"{photo_id}.{image_type}"
     upload_path = Path(settings.UPLOAD_DIR) / stored_filename
     upload_path.parent.mkdir(parents=True, exist_ok=True)
     upload_path.write_bytes(data)
-    photo = Photo(id=photo_id, album_id=album_id, user_id=current_user.id, filename=stored_filename, url=f"/uploads/{stored_filename}", title=title, author=current_user.name, comment=comment, location=location)
+    photo = Photo(id=photo_id, album_id=album_id, user_id=current_user.id, filename=filename, url=f"/uploads/{stored_filename}", title=title, author=current_user.name, comment=comment, location=location)
     session.add(photo)
     session.commit()
     session.refresh(photo)
@@ -102,10 +110,7 @@ def update_photo(photo_id: uuid.UUID, body: PhotoUpdate, session: SessionDep, cu
 @router.delete("/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_photo(photo_id: uuid.UUID, session: SessionDep, _: CurrentAdmin) -> None:
     photo = find_photo(session, photo_id)
-    upload_path = Path(settings.UPLOAD_DIR) / photo.filename
-    try:
-        os.remove(upload_path)
-    except FileNotFoundError:
-        pass
+    if upload_path := upload_path_from_url(photo.url):
+        upload_path.unlink(missing_ok=True)
     session.delete(photo)
     session.commit()

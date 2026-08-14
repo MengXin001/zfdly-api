@@ -1,12 +1,11 @@
 import uuid
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from sqlmodel import select
 
 from api.deps import CurrentAdmin, CurrentUser, SessionDep
-from core.config import settings
+from api.storage import upload_path_from_url
 from core.security import get_password_hash, verify_password
 from models import LoginRequest, Photo, RegisterRequest, User, UserAdminUpdate, UserPublic, UserUploadApprovalUpdate
 
@@ -111,10 +110,8 @@ def delete_user(user_id: uuid.UUID, session: SessionDep, current_admin: CurrentA
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
     photos = session.exec(select(Photo).where(Photo.user_id == user.id)).all()
     for photo in photos:
-        try:
-            (Path(settings.UPLOAD_DIR) / photo.filename).unlink()
-        except FileNotFoundError:
-            pass
+        if upload_path := upload_path_from_url(photo.url):
+            upload_path.unlink(missing_ok=True)
         session.delete(photo)
     session.delete(user)
     session.commit()
