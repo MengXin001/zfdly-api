@@ -18,6 +18,10 @@ def public_album(album: Album, session: SessionDep) -> AlbumPublic:
         id=album.id,
         title=album.title,
         description=album.description,
+        introDetail=album.introDetail,
+        keywords=album.keywords,
+        videoTitle=album.videoTitle,
+        videoUrl=album.videoUrl,
         cover=PhotoPublic.model_validate(cover) if cover else None,
         created_at=album.created_at,
     )

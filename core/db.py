@@ -27,9 +27,22 @@ def create_db_and_tables() -> None:
             connection.execute(text("ALTER TABLE user ADD COLUMN upload_approved BOOLEAN NOT NULL DEFAULT 0"))
     if "album" in tables:
         album_columns = {column["name"] for column in inspector.get_columns("album")}
-        if "cover_photo_id" not in album_columns:
+        missing_album_columns = {
+            "cover_photo_id": "CHAR(32)",
+            "introDetail": "VARCHAR(5000)",
+            "keywords": "VARCHAR(1000)",
+            "videoTitle": "VARCHAR(255)",
+            "videoUrl": "VARCHAR(512)",
+        }
+        missing_album_columns = {
+            name: column_type
+            for name, column_type in missing_album_columns.items()
+            if name not in album_columns
+        }
+        if missing_album_columns:
             with engine.begin() as connection:
-                connection.execute(text("ALTER TABLE album ADD COLUMN cover_photo_id CHAR(32)"))
+                for name, column_type in missing_album_columns.items():
+                    connection.execute(text(f"ALTER TABLE album ADD COLUMN {name} {column_type}"))
 
 
 def seed_albums(session: Session) -> None:

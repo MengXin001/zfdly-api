@@ -24,6 +24,10 @@ class Album(SQLModel, table=True):
     id: str = Field(primary_key=True, max_length=100)
     title: str = Field(max_length=255)
     description: str | None = Field(default=None, max_length=1000)
+    introDetail: str | None = Field(default=None, max_length=5000)
+    keywords: str | None = Field(default=None, max_length=1000)
+    videoTitle: str | None = Field(default=None, max_length=255)
+    videoUrl: str | None = Field(default=None, max_length=512)
     cover_photo_id: uuid.UUID | None = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     photos: list["Photo"] = Relationship(back_populates="album")
@@ -78,11 +82,19 @@ class AlbumCreate(SQLModel):
     id: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     title: str = PydanticField(min_length=1, max_length=255)
     description: str | None = PydanticField(default=None, max_length=1000)
+    introDetail: str | None = PydanticField(default=None, max_length=5000)
+    keywords: str | None = PydanticField(default=None, max_length=1000)
+    videoTitle: str | None = PydanticField(default=None, max_length=255)
+    videoUrl: str | None = PydanticField(default=None, max_length=512)
 
 
 class AlbumUpdate(SQLModel):
     title: str | None = PydanticField(default=None, min_length=1, max_length=255)
     description: str | None = PydanticField(default=None, max_length=1000)
+    introDetail: str | None = PydanticField(default=None, max_length=5000)
+    keywords: str | None = PydanticField(default=None, max_length=1000)
+    videoTitle: str | None = PydanticField(default=None, max_length=255)
+    videoUrl: str | None = PydanticField(default=None, max_length=512)
 
 
 class PhotoUpdate(SQLModel):
@@ -110,6 +122,10 @@ class AlbumPublic(SQLModel):
     id: str
     title: str
     description: str | None
+    introDetail: str | None
+    keywords: str | None
+    videoTitle: str | None
+    videoUrl: str | None
     cover: PhotoPublic | None
     created_at: datetime
 
