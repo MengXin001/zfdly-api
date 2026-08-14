@@ -24,6 +24,7 @@ class Album(SQLModel, table=True):
     id: str = Field(primary_key=True, max_length=100)
     title: str = Field(max_length=255)
     description: str | None = Field(default=None, max_length=1000)
+    cover_photo_id: uuid.UUID | None = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     photos: list["Photo"] = Relationship(back_populates="album")
 
@@ -84,13 +85,6 @@ class AlbumUpdate(SQLModel):
     description: str | None = PydanticField(default=None, max_length=1000)
 
 
-class AlbumPublic(SQLModel):
-    id: str
-    title: str
-    description: str | None
-    created_at: datetime
-
-
 class PhotoUpdate(SQLModel):
     filename: str | None = PydanticField(default=None, min_length=1, max_length=255)
     title: str | None = PydanticField(default=None, min_length=1, max_length=255)
@@ -110,6 +104,18 @@ class PhotoPublic(SQLModel):
     location: str | None
     created_at: datetime
     status: str
+
+
+class AlbumPublic(SQLModel):
+    id: str
+    title: str
+    description: str | None
+    cover: PhotoPublic | None
+    created_at: datetime
+
+
+class AlbumCoverUpdate(SQLModel):
+    photo_id: uuid.UUID | None = None
 
 
 class PhotosPublic(SQLModel):

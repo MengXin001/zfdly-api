@@ -7,7 +7,7 @@ from sqlmodel import select
 from api.deps import CurrentAdmin, CurrentUser, SessionDep
 from api.storage import upload_path_from_url
 from core.security import get_password_hash, verify_password
-from models import LoginRequest, Photo, RegisterRequest, User, UserAdminUpdate, UserPublic, UserUploadApprovalUpdate
+from models import Album, LoginRequest, Photo, RegisterRequest, User, UserAdminUpdate, UserPublic, UserUploadApprovalUpdate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -112,6 +112,10 @@ def delete_user(user_id: uuid.UUID, session: SessionDep, current_admin: CurrentA
     for photo in photos:
         if upload_path := upload_path_from_url(photo.url):
             upload_path.unlink(missing_ok=True)
+        album = session.get(Album, photo.album_id)
+        if album and album.cover_photo_id == photo.id:
+            album.cover_photo_id = None
+            session.add(album)
         session.delete(photo)
     session.delete(user)
     session.commit()

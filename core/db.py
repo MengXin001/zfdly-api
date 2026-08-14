@@ -17,12 +17,19 @@ def create_db_and_tables() -> None:
     if not settings.DATABASE_URL.startswith("sqlite"):
         return
     inspector = inspect(engine)
-    if "user" not in inspector.get_table_names():
-        return
-    columns = {column["name"] for column in inspector.get_columns("user")}
-    if "upload_approved" not in columns:
+    tables = inspector.get_table_names()
+    if "user" in tables:
+        user_columns = {column["name"] for column in inspector.get_columns("user")}
+    else:
+        user_columns = set()
+    if "user" in tables and "upload_approved" not in user_columns:
         with engine.begin() as connection:
             connection.execute(text("ALTER TABLE user ADD COLUMN upload_approved BOOLEAN NOT NULL DEFAULT 0"))
+    if "album" in tables:
+        album_columns = {column["name"] for column in inspector.get_columns("album")}
+        if "cover_photo_id" not in album_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE album ADD COLUMN cover_photo_id CHAR(32)"))
 
 
 def seed_albums(session: Session) -> None:

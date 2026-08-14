@@ -112,5 +112,9 @@ def delete_photo(photo_id: uuid.UUID, session: SessionDep, _: CurrentAdmin) -> N
     photo = find_photo(session, photo_id)
     if upload_path := upload_path_from_url(photo.url):
         upload_path.unlink(missing_ok=True)
+    album = session.get(Album, photo.album_id)
+    if album and album.cover_photo_id == photo.id:
+        album.cover_photo_id = None
+        session.add(album)
     session.delete(photo)
     session.commit()
