@@ -19,7 +19,7 @@ async def lifespan(_: FastAPI):
 
 Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 app = FastAPI(openapi_url=f"{settings.API_V1_STR}/openapi.json", lifespan=lifespan)
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY.get_secret_value(), session_cookie="photo_session", max_age=settings.SESSION_MAX_AGE_SECONDS, same_site="lax", https_only=settings.session_cookie_secure)
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY.get_secret_value(), session_cookie="photo_session", max_age=settings.SESSION_MAX_AGE_SECONDS, same_site="none", https_only=settings.session_cookie_secure)
 if settings.all_cors_origins:
     app.add_middleware(CORSMiddleware, allow_origins=settings.all_cors_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
