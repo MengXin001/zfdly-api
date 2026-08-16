@@ -82,6 +82,10 @@ class PasswordUpdate(SQLModel):
     password: str = PydanticField(min_length=8, max_length=128)
 
 
+class UserNameUpdate(SQLModel):
+    name: str = PydanticField(min_length=1, max_length=100)
+
+
 class AlbumCreate(SQLModel):
     id: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     title: str = PydanticField(min_length=1, max_length=255)
