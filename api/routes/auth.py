@@ -58,12 +58,20 @@ def update_my_password(body: PasswordUpdate, session: SessionDep, current_user: 
 
 
 @router.patch("/me/username", response_model=UserPublic)
-def update_my_name(body: UserNameUpdate, session: SessionDep, current_user: CurrentUser) -> UserPublic:
-    current_user.name = body.name
-    session.add(current_user)
+def update_username(body: UserNameUpdate, session: SessionDep, current_user: CurrentUser) -> UserPublic:
+    if body.user_id is None:
+        user = current_user
+    else:
+        if not current_user.is_admin:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有管理员可以修改其他用户的用户名")
+        user = session.get(User, body.user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+    user.name = body.name
+    session.add(user)
     session.commit()
-    session.refresh(current_user)
-    return public_user(current_user)
+    session.refresh(user)
+    return public_user(user)
 
 
 @router.get("/users", response_model=list[UserPublic])

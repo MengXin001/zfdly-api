@@ -84,6 +84,7 @@ class PasswordUpdate(SQLModel):
 
 class UserNameUpdate(SQLModel):
     name: str = PydanticField(min_length=1, max_length=100)
+    user_id: uuid.UUID | None = None
 
 
 class AlbumCreate(SQLModel):
